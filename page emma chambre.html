@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>La chambre d'Emma</title>
+
+<style>
+
+body{
+    margin:0;
+    background:#151218;
+    color:#f4e9d4;
+    font-family:Georgia, serif;
+}
+
+#jeu{
+    display:flex;
+    min-height:100vh;
+}
+
+/* SCENE */
+#scene{
+    flex:1;
+    position:relative;
+    text-align:center;
+    background:#0f0d11;
+}
+
+#chambre{
+    max-width:100%;
+    height:auto;
+}
+
+/* LOUPE */
+#loupe{
+    position:absolute;
+    width:180px;
+    height:180px;
+    border-radius:50%;
+    border:2px solid #b79c6b;
+    pointer-events:none;
+    display:none;
+    background-image:url("chambreemma.jpg");
+    background-repeat:no-repeat;
+    box-shadow:0 0 20px rgba(219,196,196,0.6);
+    z-index:10;
+}
+
+/* INTERFACE */
+#interface{
+    width:350px;
+    background:#201b24;
+    border-left:2px solid #5b4768;
+    padding:20px;
+    box-sizing:border-box;
+}
+
+h2{
+    margin-top:0;
+    color:#d7b98c;
+}
+
+#message{
+    min-height:120px;
+    background:#161217;
+    border:1px solid #45374d;
+    padding:15px;
+    margin-bottom:20px;
+}
+
+/* INVENTAIRE */
+#inventaire{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+
+.objet{
+    background:#161217;
+    border:1px solid #45374d;
+    padding:8px;
+    text-align:center;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.objet:hover{
+    border-color:#b79c6b;
+}
+
+.objet img{
+    width:60px;
+    display:block;
+    margin:0 auto 5px;
+}
+
+/* VIEWER */
+#viewer{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.85);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:999;
+}
+
+#viewer img{
+    max-width:80%;
+    max-height:80%;
+    border:2px solid #b79c6b;
+}
+
+/* JOURNAL */
+#journal{
+    margin-top:20px;
+    padding:15px;
+    border:1px solid #6b5578;
+    background:#161217;
+    display:none;
+}
+
+#journal h3{
+    color:#d7b98c;
+    margin-top:0;
+}
+
+</style>
+</head>
+
+<body>
+
+<audio id="musique" loop>
+    <source src="thecrystalcave.mp3" type="audio/mpeg">
+</audio>
+
+<div id="jeu">
+
+    <div id="scene">
+        <img src="chambreemma2.png" id="chambre">
+        <div id="loupe"></div>
+    </div>
+
+    <div id="interface">
+
+        <h2>Inventaire</h2>
+
+        <div id="message">
+            Emma te cache quelque chose.<br>
+            Fouille sa chambre.
+        </div>
+
+        <div id="inventaire"></div>
+
+        <div id="journal">
+            <h3>Journal intime d'Emma</h3>
+            <p>
+                Certaines choses ne doivent pas être découvertes...
+            </p>
+        </div>
+
+    </div>
+
+</div>
+
+<div id="viewer">
+    <img id="viewerImg">
+</div>
+
+<script>
+
+/* ELEMENTS */
+const image = document.getElementById("chambre");
+const loupe = document.getElementById("loupe");
+const inventaireDiv = document.getElementById("inventaire");
+const viewer = document.getElementById("viewer");
+const viewerImg = document.getElementById("viewerImg");
+const message = document.getElementById("message");
+const journalDiv = document.getElementById("journal");
+const musique = document.getElementById("musique");
+
+let inventaire = [];
+
+/* MUSIQUE */
+window.addEventListener("load", () => {
+    musique.volume = 0.4;
+    musique.play().catch(() => {
+        document.addEventListener("click", () => musique.play(), { once:true });
+    });
+});
+
+/* OBJETS */
+const objets = [
+{
+    id:"athame",
+    nom:"Athame",
+    icon:"athame.jpg",
+    trouve:false,
+    x1:110,y1:420,x2:260,y2:650,
+    texte:"Tu trouves un athamé rituel."
+},
+{
+    id:"fiole",
+    nom:"Fiole",
+    icon:"fiole.jpg",
+    trouve:false,
+    x1:220,y1:420,x2:340,y2:620,
+    texte:"Une fiole étrange."
+},
+{
+    id:"carte",
+    nom:"Carte du Verseau",
+    icon:"carteverseau.jpg",
+    trouve:false,
+    x1:560,y1:650,x2:920,y2:1020,
+    texte:"Carte du Centre du Verseau."
+},
+{
+    id:"journal",
+    nom:"Journal",
+    icon:"emmajournal.png",
+    trouve:false,
+    visible:false,
+    x1:360,y1:350,x2:620,y2:520,
+    texte:`Je sais qu'elle pense que je lui mens.
+    Je sais qu'elle croit que je lui cache quelque chose.
+
+C'est vrai.
+
+Mais je garde certaines choses pour moi,
+ce n'est pas par jalousie.
+
+C'est pour la protéger.
+
+Certaines personnes du coven savent déjà
+qu'elle s'intéresse à la magie.
+
+Si elles découvrent ce qu'elle cherche,
+elles viendront aussi la chercher.`
+}
+];
+
+/* CLICK IMAGE */
+image.addEventListener("click",(e)=>{
+
+    const rect = image.getBoundingClientRect();
+
+    const x = (e.clientX - rect.left) * (image.naturalWidth / image.width);
+    const y = (e.clientY - rect.top) * (image.naturalHeight / image.height);
+
+    verifierZones(x,y);
+});
+
+/* HOVER + LOUPE */
+image.addEventListener("mousemove",(e)=>{
+
+    const rect = image.getBoundingClientRect();
+
+    const x = (e.clientX - rect.left) * (image.naturalWidth / image.width);
+    const y = (e.clientY - rect.top) * (image.naturalHeight / image.height);
+
+    const objHover = objets.find(o =>
+        !o.trouve &&
+        x>=o.x1 && x<=o.x2 &&
+        y>=o.y1 && y<=o.y2
+    );
+
+    image.style.cursor = objHover
+        ? "url('mag-glass.cur'), auto"
+        : "default";
+
+    const lx = e.clientX - rect.left;
+    const ly = e.clientY - rect.top;
+
+    loupe.style.display = "block";
+    loupe.style.left = (lx-90)+"px";
+    loupe.style.top = (ly-90)+"px";
+
+    const zoom = 2;
+
+    loupe.style.backgroundSize =
+        (image.width*zoom)+"px "+(image.height*zoom)+"px";
+
+    loupe.style.backgroundPosition =
+        (-lx*zoom+90)+"px "+(-ly*zoom+90)+"px";
+});
+
+image.addEventListener("mouseleave",()=>{
+    loupe.style.display="none";
+    image.style.cursor="default";
+});
+
+/* LOGIQUE CLIC */
+function verifierZones(x,y){
+
+    const obj = objets.find(o =>
+        !o.trouve &&
+        x>=o.x1 && x<=o.x2 &&
+        y>=o.y1 && y<=o.y2
+    );
+
+    if(!obj){
+        message.textContent = "Rien d'intéressant ici.";
+        return;
+    }
+
+    obj.trouve = true;
+    inventaire.push(obj);
+    afficherInventaire();
+
+    if(obj.id === "fiole"){
+    message.innerHTML = `
+        Une fiole étrange...<br><br>
+        <span style="color:#d7b98c;">
+        C'est la même fiole que celle donnée par la vendeuse du Centre du Verseau lors de notre Esbat au lac !
+        </span>
+    `;
+}
+ else if(obj.id === "journal"){
+    message.textContent = obj.texte;
+    journalDiv.style.display = "block";
+    journalUnlocked = true;
+}
+}
+
+/* INVENTAIRE */
+function afficherInventaire(){
+
+    inventaireDiv.innerHTML = "";
+
+    inventaire.forEach(obj=>{
+
+        const div = document.createElement("div");
+        div.className = "objet";
+
+        const img = document.createElement("img");
+        img.src = obj.icon;
+
+        const label = document.createElement("div");
+        label.textContent = obj.nom;
+
+        div.appendChild(img);
+        div.appendChild(label);
+
+        div.addEventListener("click",()=>{
+            viewerImg.src = obj.icon;
+            viewer.style.display = "flex";
+        });
+
+        inventaireDiv.appendChild(div);
+    });
+}
+
+/* CLOSE VIEWER */
+viewer.addEventListener("click",()=>{
+    viewer.style.display="none";
+});
+
+</script>
+
+</body>
+</html>

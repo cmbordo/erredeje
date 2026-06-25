@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html><head>
+
+
+<meta charset="utf-8">
+
+<style>
+
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-image: url("ulotkidruk-paper-1468883.jpg");
+  font-family: "Courier New", monospace;
+}
+
+/* CONTENEUR */
+.parchemin-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* GIF PARCHEMIN */
+.parchemin {
+  width: 500px;
+  display: block;
+}
+
+/* TEXTE SUR LE GIF */
+#message {
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  width: 80%;
+  text-align: center;
+
+  font-family: "UnifrakturCook", "Old English Text MT", serif;
+  font-size: 36px;
+  font-weight: bold;
+
+  color: black;
+
+  pointer-events: none;
+}
+
+</style></head><body onload="afficherMessage()">
+
+<div class="parchemin-container">
+
+  <img src="uwkK3X.gif" class="parchemin"><br>
+
+
+  <div id="message"></div>
+
+</div>
+
+<script>
+
+const texte = "Méfiez-vous d'une personne proche.";
+
+function afficherMessage() {
+
+  const el = document.getElementById("message");
+  let i = 0;
+
+  el.textContent = "";
+
+  const interval = setInterval(() => {
+
+    el.textContent += texte[i];
+    i++;
+
+    if (i >= texte.length) {
+      clearInterval(interval);
+    }
+
+  }, 50);
+}
+
+</script>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<div style="text-align: center;"><a href="page%2019%20debrief%20lycee.html"><big><big><big>Rendez-vous </big></big></big></a><br>
+<a href="page%2019%20debrief%20lycee.html"><big><big><big>page 19</big></big></big></a><br>
+</div>
+</body></html>

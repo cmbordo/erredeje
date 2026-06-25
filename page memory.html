@@ -1,0 +1,177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>page memory</title></head><body>
+  <br>
+
+  <!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+
+<style>
+
+body{
+    background-image:url("ulotkidruk-paper-1468883.jpg");
+    font-family:"Courier New", monospace;
+    text-align:center;
+}
+
+#jeu{
+    width:720px;
+    margin:auto;
+
+    display:grid;
+    grid-template-columns:repeat(6, 110px);
+    gap:8px;
+    justify-content:center;
+}
+
+.carte{
+    width:100px;
+    height:140px;
+    cursor:pointer;
+}
+
+#compteur{
+    font-size:24px;
+    margin:20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>Le défi du gérant</h2>
+
+<p>
+« Passe-moi ce niveau et je te montrerai ce qui se cache derrière le rideau violet.»
+</p>
+
+<div id="compteur">
+Tentatives restantes : <span id="essais">30</span>
+</div>
+
+<div id="jeu"></div>
+
+<script>
+
+const images = [
+
+"agente.jpg",
+"bagarreurs.jpg",
+"exclude.jpg",
+"force.jpg",
+"goblin.jpg",
+"goblins.jpg",
+"jackalope.jpeg",
+"lapicorne.jpg",
+"nature.png",
+"octopus.jpg",
+"pirate.jpg",
+"snap.jpg"
+
+];
+
+let cartes = [...images, ...images];
+
+cartes.sort(() => Math.random() - 0.5);
+
+const jeu = document.getElementById("jeu");
+
+let premiere = null;
+let verrou = false;
+
+let pairesTrouvees = 0;
+
+let essaisRestants = 30;
+
+const compteur = document.getElementById("essais");
+
+cartes.forEach(image => {
+
+    const img = document.createElement("img");
+
+    img.src = "back.jpg";
+
+    img.className = "carte";
+
+    img.dataset.image = image;
+
+    img.onclick = retourner;
+
+    jeu.appendChild(img);
+
+});
+
+function retourner(){
+
+    if(verrou) return;
+
+    if(this.classList.contains("trouvee"))
+        return;
+
+    if(this === premiere)
+        return;
+
+    this.src = this.dataset.image;
+
+    if(!premiere){
+
+        premiere = this;
+
+        return;
+
+    }
+
+    essaisRestants--;
+
+    compteur.textContent = essaisRestants;
+
+    if(premiere.dataset.image === this.dataset.image){
+
+        premiere.classList.add("trouvee");
+        this.classList.add("trouvee");
+
+        pairesTrouvees++;
+
+        premiere = null;
+
+        if(pairesTrouvees === 12){
+
+            alert("Le rideau violet s'écarte.");
+
+            window.location.href = "page 18 secret.html";
+        }
+
+    }else{
+
+        verrou = true;
+
+        let seconde = this;
+
+        setTimeout(() => {
+
+            premiere.src = "back.jpg";
+            seconde.src = "back.jpg";
+
+            premiere = null;
+
+            verrou = false;
+
+        }, 900);
+    }
+
+    if(essaisRestants <= 0){
+
+        alert("Tu n'as pas réussi à terminer le niveau.");
+
+        window.location.href = "page 9 bus.html";
+    }
+}
+
+</script>
+
+</body>
+</html>
+
+</body></html>
